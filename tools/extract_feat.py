@@ -93,9 +93,9 @@ def parse_args():
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file', default=None, type=str)
     parser.add_argument('--num_bbox', dest='num_bbox',
-                        help='[min,max] number of bboxes to be extracted', default='10,100', type=str)
+                        help='[min,max] number of bboxes to be extracted. Default is [10,100]', default='10,100', type=str)
     parser.add_argument('--feat_name', dest='feat_name',
-                        help='layer name to extract features, pool5_flat for ResNet-101, fc7_flat for VGG-16', default='pool5_flat', type=str)
+                        help='layer name to extract features, pool5_flat(default) for ResNet-101, fc7_flat for VGG-16', default='pool5_flat', type=str)
     parser.add_argument('--img_dir', dest='img_dir',
                         help='image folder',
                         default='karpathy_train', type=str)
