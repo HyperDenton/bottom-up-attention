@@ -13,7 +13,7 @@ set -e
 export PYTHONUNBUFFERED="True"
 
 GPU_ID=$1
-NET="ResNet-101"
+NET="VGG16"
 NET_lc=${NET,,}
 DATASET=$2
 
@@ -41,9 +41,10 @@ case $DATASET in
   vg)
     # This is a very conservative training schedule
     TRAIN_IMDB="vg_1600-400-20_train"
+    #TRAIN_IMDB="vg_1600-400-20_minitrain"
     TEST_IMDB="vg_1600-400-20_val"
     PT_DIR="vg"
-    ITERS=380000
+    ITERS=320000
     ;;
   *)
     echo "No dataset given"
@@ -56,11 +57,11 @@ exec &> >(tee -a "$LOG")
 echo Logging output to "$LOG"
 
 time ./tools/train_net_multi_gpu.py --gpu ${GPU_ID} \
- --solver models/${PT_DIR}/${NET}/faster_rcnn_end2end_final/solver.prototxt \
- --weights data/imagenet_models/${NET}-model.caffemodel \
+ --solver models/${PT_DIR}/${NET}/faster_rcnn_end2end/solver.prototxt \
+ --weights data/imagenet_models/${NET}.v2.caffemodel \
  --imdb ${TRAIN_IMDB} \
  --iters ${ITERS} \
- --cfg experiments/cfgs/faster_rcnn_end2end_resnet.yml \
+ --cfg experiments/cfgs/faster_rcnn_end2end_vgg.yml \
  ${EXTRA_ARGS}
 
  set +x
@@ -68,9 +69,9 @@ time ./tools/train_net_multi_gpu.py --gpu ${GPU_ID} \
  set -x
 
 time ./tools/test_net.py --gpu ${GPU_ID:0:1} \
-  --def models/${PT_DIR}/${NET}/faster_rcnn_end2end_rel/test.prototxt \
+  --def models/${PT_DIR}/${NET}/faster_rcnn_end2end/test.prototxt \
   --net ${NET_FINAL} \
   --imdb ${TEST_IMDB} \
-  --cfg experiments/cfgs/faster_rcnn_end2end_resnet.yml \
+  --cfg experiments/cfgs/faster_rcnn_end2end_vgg.yml \
   ${EXTRA_ARGS}
 

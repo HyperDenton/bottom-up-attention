@@ -143,11 +143,9 @@ layer {
   top: "conv3_1"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 256
@@ -168,11 +166,9 @@ layer {
   top: "conv3_2"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 256
@@ -193,11 +189,9 @@ layer {
   top: "conv3_3"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 256
@@ -229,11 +223,9 @@ layer {
   top: "conv4_1"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 512
@@ -254,11 +246,9 @@ layer {
   top: "conv4_2"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 512
@@ -279,11 +269,9 @@ layer {
   top: "conv4_3"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 512
@@ -315,11 +303,9 @@ layer {
   top: "conv5_1"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 512
@@ -340,11 +326,9 @@ layer {
   top: "conv5_2"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 512
@@ -365,11 +349,9 @@ layer {
   top: "conv5_3"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   convolution_param {
     num_output: 512
@@ -391,8 +373,8 @@ layer {
   type: "Convolution"
   bottom: "conv5_3"
   top: "rpn/output"
-  param { lr_mult: 1.0 decay_mult: 1.0 }
-  param { lr_mult: 2.0 decay_mult: 0 }
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 512
     kernel_size: 3 pad: 1 stride: 1
@@ -412,8 +394,8 @@ layer {
   type: "Convolution"
   bottom: "rpn/output"
   top: "rpn_cls_score"
-  param { lr_mult: 1.0 decay_mult: 1.0 }
-  param { lr_mult: 2.0 decay_mult: 0 }
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 24   # 2(bg/fg) * 12(anchors)
     kernel_size: 1 pad: 0 stride: 1
@@ -421,13 +403,14 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
   name: "rpn_bbox_pred"
   type: "Convolution"
   bottom: "rpn/output"
   top: "rpn_bbox_pred"
-  param { lr_mult: 1.0 decay_mult: 1.0 }
-  param { lr_mult: 2.0 decay_mult: 0 }
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 48   # 4 * 12(anchors)
     kernel_size: 1 pad: 0 stride: 1
@@ -435,12 +418,13 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
-   bottom: "rpn_cls_score"
-   top: "rpn_cls_score_reshape"
-   name: "rpn_cls_score_reshape"
-   type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+  bottom: "rpn_cls_score"
+  top: "rpn_cls_score_reshape"
+  name: "rpn_cls_score_reshape"
+  type: "Reshape"
+  reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
 }
 
 #========= RoI Proposal ============
@@ -451,6 +435,7 @@ layer {
   bottom: "rpn_cls_score_reshape"
   top: "rpn_cls_prob"
 }
+
 layer {
   name: 'rpn_cls_prob_reshape'
   type: 'Reshape'
@@ -458,6 +443,7 @@ layer {
   top: 'rpn_cls_prob_reshape'
   reshape_param { shape { dim: 0 dim: 24 dim: -1 dim: 0 } }
 }
+
 layer {
   name: 'proposal'
   type: 'Python'
@@ -493,11 +479,9 @@ layer {
   top: "fc6"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   inner_product_param {
     num_output: 4096
@@ -516,11 +500,9 @@ layer {
   top: "fc7"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   inner_product_param {
     num_output: 4096
@@ -533,20 +515,27 @@ layer {
   top: "fc7"
 }
 layer {
+  bottom: "fc7"
+  top: "fc7_flat"
+  name: "fc7_flat"
+  type: "Flatten"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
   name: "cls_score"
   type: "InnerProduct"
   bottom: "fc7"
   top: "cls_score"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   inner_product_param {
-    num_output: 2501
+    num_output: 1601
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -564,17 +553,15 @@ layer {
   top: "bbox_pred"
   param {
     lr_mult: 1
-    decay_mult: 1
   }
   param {
     lr_mult: 2
-    decay_mult: 0
   }
   inner_product_param {
-    num_output: 10004
+    num_output: 6404
     weight_filler {
       type: "gaussian"
-      std: 0.001
+      std: 0.01
     }
     bias_filler {
       type: "constant"
@@ -587,4 +574,106 @@ layer {
   type: "Softmax"
   bottom: "cls_score"
   top: "cls_prob"
+}
+layer {
+  name: "predicted_cls"
+  type: "ArgMax"
+  bottom: "cls_score"
+  top: "predicted_cls"
+  argmax_param {
+    axis: 1
+  }
+}
+layer {
+  name: "cls_embedding"
+  type: "Embed"
+  bottom: "predicted_cls"
+  top: "cls_embedding"
+  propagate_down: false
+  embed_param {
+    num_output: 256
+    input_dim: 1601
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+  }
+}
+layer {
+  bottom: "cls_embedding"
+  top: "cls_embedding_flat"
+  name: "cls_embedding_flat"
+  type: "Flatten"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "concat_fc7"
+  type: "Concat"
+  bottom: "fc7_flat"
+  bottom: "cls_embedding_flat"
+  top: "concat_fc7"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "fc_attr"
+  type: "InnerProduct"
+  bottom: "concat_fc7"
+  top: "fc_attr"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 512
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "relu_attr"
+  type: "ReLU"
+  bottom: "fc_attr"
+  top: "fc_attr"
+}
+layer {
+  name: "attr_score"
+  type: "InnerProduct"
+  bottom: "fc_attr"
+  top: "attr_score"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 401
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "attr_prob"
+  type: "Softmax"
+  bottom: "attr_score"
+  top: "attr_prob"
 }

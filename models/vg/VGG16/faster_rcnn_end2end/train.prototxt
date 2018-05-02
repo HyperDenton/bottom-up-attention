@@ -8,7 +8,7 @@ layer {
   python_param {
     module: 'roi_data_layer.layer'
     layer: 'RoIDataLayer'
-    param_str: "'num_classes': 2501"
+    param_str: "'num_classes': 1601"
   }
 }
 
@@ -511,10 +511,11 @@ layer {
   top: 'bbox_targets'
   top: 'bbox_inside_weights'
   top: 'bbox_outside_weights'
+  top: 'attr_labels'
   python_param {
     module: 'rpn.proposal_target_layer'
     layer: 'ProposalTargetLayer'
-    param_str: "'num_classes': 2501"
+    param_str: "'num_classes': 1601\n'num_attr_classes': 401\n'num_rel_classes': 0\n'ignore_label': -1"
   }
 }
 
@@ -575,6 +576,26 @@ layer {
   top: "fc7"
 }
 layer {
+  name: "foreground_fc7"
+  type: "Slice"
+  bottom: "fc7"
+  top: "foreground_fc7"
+  top: "background_fc7"
+  slice_param {
+    axis: 0
+    slice_point: 32
+  }
+}
+layer {
+  bottom: "foreground_fc7"
+  top: "fc7_flat"
+  name: "fc7_flat"
+  type: "Flatten"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
   name: "cls_score"
   type: "InnerProduct"
   bottom: "fc7"
@@ -586,7 +607,7 @@ layer {
     lr_mult: 2
   }
   inner_product_param {
-    num_output: 2501
+    num_output: 1601
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -609,10 +630,114 @@ layer {
     lr_mult: 2
   }
   inner_product_param {
-    num_output: 10004
+    num_output: 6404
     weight_filler {
       type: "gaussian"
-      std: 0.001
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "foreground_labels"
+  type: "Slice"
+  bottom: "labels"
+  top: "foreground_labels"
+  top: "background_labels"
+  slice_param {
+    axis: 0
+    slice_point: 32
+  }
+}
+layer {
+  name: "silence"
+  type: "Silence"
+  bottom: "background_fc7"
+  bottom: "background_labels"
+}
+layer {
+  name: "cls_embedding"
+  type: "Embed"
+  bottom: "foreground_labels"
+  top: "cls_embedding"
+  propagate_down: false
+  embed_param {
+    num_output: 256
+    input_dim: 1601
+    bias_term: false
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+  }
+}
+layer {
+  bottom: "cls_embedding"
+  top: "cls_embedding_flat"
+  name: "cls_embedding_flat"
+  type: "Flatten"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "concat_pool5"
+  type: "Concat"
+  bottom: "fc7_flat"
+  bottom: "cls_embedding_flat"
+  top: "concat_pool5"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "fc_attr"
+  type: "InnerProduct"
+  bottom: "concat_pool5"
+  top: "fc_attr"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 512
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "relu_attr"
+  type: "ReLU"
+  bottom: "fc_attr"
+  top: "fc_attr"
+}
+layer {
+  name: "attr_score"
+  type: "InnerProduct"
+  bottom: "fc_attr"
+  top: "attr_score"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 401
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
     }
     bias_filler {
       type: "constant"
@@ -639,4 +764,18 @@ layer {
   bottom: "bbox_outside_weights"
   top: "loss_bbox"
   loss_weight: 1
+}
+layer {
+  name: "loss_attr"
+  type: "SoftmaxWithLoss"
+  bottom: "attr_score"
+  bottom: "attr_labels"
+  propagate_down: 1
+  propagate_down: 0
+  top: "loss_attrs"
+  loss_weight: 0.5
+  loss_param {
+    ignore_label: -1
+    normalization: VALID
+  }
 }
