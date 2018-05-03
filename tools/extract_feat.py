@@ -162,8 +162,8 @@ if __name__ == '__main__':
 
     num_bbox = args.num_bbox.split(',')
     min_max_bboxes = [int(i) for i in num_bbox]
-    assert(len(min_max_bboxes))
-    assert(min_max_bboxes[0] <= min_max_bboxes[1])
+    if len(min_max_bboxes) != 2 or min_max_bboxes[0] >= min_max_bboxes[1]:
+        print('illegal num_bbox format!')
 
     feat_name = args.feat_name
 
