@@ -164,7 +164,7 @@ Any NVIDIA GPU with 12GB or larger memory is OK for training Faster R-CNN ResNet
 #### Expected detection results for the pretrained model
 
 |                   | objects mAP@0.5     | objects weighted mAP@0.5 | attributes mAP@0.5    | attributes weighted mAP@0.5 |
-|-------------------|:-------------------:|:------------------------:|:---------------------:|:---------------------------:|
+|:-------------------:|:-------------------:|:------------------------:|:---------------------:|:---------------------------:|
 |Faster R-CNN, ResNet-101 | 10.2%  | 15.1% | 7.8%  | 27.8% |
 |Faster R-CNN, VGG-16 | 8.5%  | 13.0% | 6.8%  | 26.0% |
 
@@ -176,5 +176,5 @@ Note that mAP is relatively low because many classes overlap (e.g. person / man 
 To extract visual features for an image corpus, use the following script. `img_dir` contains the images to be proceed, `out_dir` contains the corresponding features for the images with each feature in a .npz file. `--num_bboxes` denotes the MIN and MAX number of bboxes for the images, `feat_name` denotes the name of the extracted layer. 
 
 ```
-./tools/extract_feat.py --gpu 0,1,2,3 --cfg experiments/cfgs/faster_rcnn_end2end_resnet_vg.yml --def models/vg/ResNet-101/faster_rcnn_end2end/test.prototxt --net data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --img_dir /path/to/images/ --out_dir /path/to/outfeat/ --num_bboxes=10,100 --feat_name=pool5_flat
+./tools/extract_feat.py --gpu 0,1,2,3 --cfg experiments/cfgs/faster_rcnn_end2end_resnet_vg.yml --def models/vg/ResNet-101/faster_rcnn_end2end/test.prototxt --net data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --img_dir /path/to/images/ --out_dir /path/to/outfeat/ --num_bboxes 10,100 --feat_name pool5_flat
 ```

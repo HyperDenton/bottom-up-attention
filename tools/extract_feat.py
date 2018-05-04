@@ -23,22 +23,18 @@ import time, os, sys
 import base64
 import numpy as np
 import cv2
-import csv
 from multiprocessing import Process
 import random
 import json
 
-csv.field_size_limit(sys.maxsize)
 
-
-# Settings for the number of features per image. To re-create pretrained features with 36 features
-# per image, set both values to 36. 
-FEAT = 'pool5_flat'
-#FEAT = 'fc7_flat' # for VGG-16
-
-def load_imagelist(image_dir):
-    img_list = os.listdir(image_dir)
-    random.shuffle(img_list)
+# load image list in a folder recursively
+def load_imagelist(root_dir):
+    img_list = []
+    g = os.walk(root_dir)
+    for path, d, filelist in g:  
+        for img in filelist:    
+            img_list.append(os.path.join(path, img))
     return img_list
 
 def get_feats_from_im(net, im, min_max_bboxes, feat_name, conf_thresh=0.2):
@@ -78,7 +74,7 @@ def parse_args():
     """
     Parse input arguments
     """
-    parser = argparse.ArgumentParser(description='Generate bbox output from a Fast R-CNN network')
+    parser = argparse.ArgumentParser(description='Generate bbox output from a Faster R-CNN network')
     parser.add_argument('--gpu', dest='gpu_id', help='GPU id(s) to use',
                         default='0', type=str)
     parser.add_argument('--def', dest='prototxt',
@@ -110,7 +106,7 @@ def parse_args():
     args = parser.parse_args()
     return args
                     
-def generate_npz(gpu_id, prototxt, weights, image_ids, input_dir, output_dir, min_max_bboxes, feat_name):
+def generate_npz(gpu_id, prototxt, weights, image_paths, output_dir, min_max_bboxes, feat_name):
     
     caffe.set_mode_gpu()
     caffe.set_device(gpu_id)
@@ -118,9 +114,9 @@ def generate_npz(gpu_id, prototxt, weights, image_ids, input_dir, output_dir, mi
     
     _t = {'misc' : Timer()}
     count = 0
-    total = len(image_ids)
-    for image_id in image_ids:
-        input_img_path = os.path.join(input_dir, image_id)
+    total = len(image_paths)
+    for image_path in image_paths:
+        _, image_id = os.path.split(image_path) # split the image path and obtain the image file name
         output_file_path = os.path.join(output_dir, image_id + '.npz')
         
         # skip the proceed images
@@ -129,9 +125,9 @@ def generate_npz(gpu_id, prototxt, weights, image_ids, input_dir, output_dir, mi
 
         _t['misc'].tic()
         #print input_img_path
-        im = cv2.imread(input_img_path)
+        im = cv2.imread(image_path)
         if im is None:
-            print(input_img_path, "is illegal!")
+            print(image_path, "is illegal!")
             continue
         features, bbox, image_h, image_w, num_bbox = get_feats_from_im(net, im, min_max_bboxes, feat_name)
         x = np.transpose(features)
@@ -188,7 +184,7 @@ if __name__ == '__main__':
     for i,gpu_id in enumerate(gpus):
         #generate_npz(gpu_id, args.prototxt, args.caffemodel, image_ids[i], args.img_dir, outpath)
         p = Process(target=generate_npz,
-                    args=(gpu_id, args.prototxt, args.caffemodel, image_ids[i], args.img_dir, output_dir, min_max_bboxes, feat_name))
+                    args=(gpu_id, args.prototxt, args.caffemodel, image_ids[i], output_dir, min_max_bboxes, feat_name))
         p.daemon = True
         p.start()
         procs.append(p)
