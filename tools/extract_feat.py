@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 
-"""Generate bottom-up attention features as a tsv file. Can use multiple gpus, each produces a 
-   separate tsv file that can be merged later (e.g. by using merge_tsv function). 
-   Modify the load_image_ids script as necessary for your data location. """
+"""Generate bottom-up attention features as a npz file for each image. Can use multiple gpus"""
 
 
 # Example:

@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
 
-"""Generate bottom-up attention features as a tsv file. Can use multiple gpus, each produces a 
-   separate tsv file that can be merged later (e.g. by using merge_tsv function). 
-   Modify the load_image_ids script as necessary for your data location. """
+"""
+   Generate bottom-up attention features as a npz file for each image. Can use multiple gpus. 
+   providing three modes: 0 for rois bbox based feature extraction, 1 for detection bbox based 
+   feature extraction based on the pre-extracted bbox, 2 for detection bbox extraction
+   """
 
 
 # Example:
-#./tools/extract_feat.py --gpu 0,1,2,3 --cfg experiments/cfgs/faster_rcnn_end2end_resnet_vg.yml --def models/vg/ResNet-101/faster_rcnn_end2end/test.prototxt --net data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --img_dir /path/to/images/ --out_dir /path/to/outfeat/ --num_bboxes=10,100 --feat_name=pool5_flat
+#./tools/extract_feat_v2.py --gpu 0,1,2,3 --cfg experiments/cfgs/faster_rcnn_end2end_resnet_vg.yml --def models/vg/ResNet-101/faster_rcnn_end2end/test.prototxt --net data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --img_dir /path/to/images/ --out_dir /path/to/outfeat/ --num_bboxes=10,100 --feat_name=pool5_flat --mode=0
 
 import _init_paths
 from fast_rcnn.config import cfg, cfg_from_file
