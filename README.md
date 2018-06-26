@@ -165,6 +165,7 @@ Any NVIDIA GPU with 12GB or larger memory is OK for training Faster R-CNN ResNet
 
 |                   | objects mAP@0.5     | objects weighted mAP@0.5 | attributes mAP@0.5    | attributes weighted mAP@0.5 |
 |:-------------------:|:-------------------:|:------------------------:|:---------------------:|:---------------------------:|
+|Faster R-CNN, ResNet-152 | 11.1%  | 15.7% | 7.8%  | 27.9% |
 |Faster R-CNN, ResNet-101 | 10.2%  | 15.1% | 7.8%  | 27.8% |
 |Faster R-CNN, VGG-16 | 8.5%  | 13.0% | 6.8%  | 26.0% |
 
