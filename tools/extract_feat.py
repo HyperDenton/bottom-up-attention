@@ -119,6 +119,7 @@ def generate_npz(gpu_id, prototxt, weights, image_paths, output_dir, min_max_bbo
         
         # skip the proceed images
         if os.path.exists(output_file_path):
+            os.remove(image_path)
             continue
 
         _t['misc'].tic()
@@ -132,7 +133,7 @@ def generate_npz(gpu_id, prototxt, weights, image_paths, output_dir, min_max_bbo
         _t['misc'].toc()
 
         np.savez_compressed(output_file_path, x=x, bbox=bbox, num_bbox=num_bbox, image_h=image_h, image_w=image_w)        
-        
+        os.remove(image_path)
         if (count % 100) == 0:
             print 'GPU %d, proceed %d/%d images'% (gpu_id, count, total)
         count += 1
@@ -165,27 +166,27 @@ if __name__ == '__main__':
     print('Using config:')
     pprint.pprint(cfg)
     assert cfg.TEST.HAS_RPN
+    while True:
+        image_ids = load_imagelist(args.img_dir)
+        random.seed(10)
+        random.shuffle(image_ids)
+        # Split image ids between gpus
+        image_ids = [image_ids[i::len(gpus)] for i in range(len(gpus))]
+        
+    #    caffe.init_log()
+    #    caffe.log('Using devices %s' % str(gpus))
+        procs = []    
+        output_dir = args.outpath
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-    image_ids = load_imagelist(args.img_dir)
-    random.seed(10)
-    random.shuffle(image_ids)
-    # Split image ids between gpus
-    image_ids = [image_ids[i::len(gpus)] for i in range(len(gpus))]
-    
-    caffe.init_log()
-    caffe.log('Using devices %s' % str(gpus))
-    procs = []    
-    output_dir = args.outpath
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    for i,gpu_id in enumerate(gpus):
-        #generate_npz(gpu_id, args.prototxt, args.caffemodel, image_ids[i], args.img_dir, outpath)
-        p = Process(target=generate_npz,
-                    args=(gpu_id, args.prototxt, args.caffemodel, image_ids[i], output_dir, min_max_bboxes, feat_name))
-        p.daemon = True
-        p.start()
-        procs.append(p)
-    for p in procs:
-        p.join()            
+        for i,gpu_id in enumerate(gpus):
+            #generate_npz(gpu_id, args.prototxt, args.caffemodel, image_ids[i], args.img_dir, outpath)
+            p = Process(target=generate_npz,
+                        args=(gpu_id, args.prototxt, args.caffemodel, image_ids[i], output_dir, min_max_bboxes, feat_name))
+            p.daemon = True
+            p.start()
+            procs.append(p)
+        for p in procs:
+            p.join()            
                   
